@@ -1,78 +1,69 @@
 import re
 from pymongo import MongoClient
 import matplotlib.pyplot as plt
-import tabulate
 
-keyword = "Official"
+def sentiment(s):
+    if s > 0:
+        return "positive"
+    elif s < 0:
+        return "negative"
+    else:
+        return "neutral"
+
 client = MongoClient('mongodb://localhost:27017/')
-result = client['Spotify_Youtube']['songs '].aggregate([
+result = client['Spotify_Youtube']['songs'].aggregate([
     {
-        '$match': {
-            'Description': {
-                '$regex': re.compile(keyword)
-            }
-        }
-    }, {
+        "$match": {"Description": {"$exists": True, "$ne": ""}}
+    },
+    {
         '$project': {
-            'keywords': {
-                '$split': [
-                    '$Description', ' '
-                ]
+            '_id': 0, 
+            'Title': 1, 
+            'Description': 1, 
+            'Danceability': 1, 
+            'Energy': 1, 
+            'Valence': 1, 
+            'Tempo': 1, 
+            'Duration_ms': 1, 
+            'Streams': 1,  # corrected from 'Stream'
+            'Views': 1, 
+            'Likes': 1, 
+            'Comments': 1
+        }
+    }, 
+    {
+        '$addFields': {
+            'sentiment': {
+                '$switch': {
+                    'branches': [
+                        {'case': {'$gt': ['$Likes', '$Comments']}, 'then': 'positive'},
+                        {'case': {'$lt': ['$Likes', '$Comments']}, 'then': 'negative'},
+                    ],
+                    'default': 'neutral'
+                }
             }
         }
-    }, {
-        '$unwind': '$keywords'
-    }, {
-        '$match': {
-            'keywords': {
-                '$regex': re.compile(r"Official")
-            }
-        }
-    }, {
+    },
+    {
         '$group': {
-            '_id': '$keywords', 
-            'count': {
-                '$sum': 1
-            }
-        }
-    }, {
-        '$sort': {
-            'count': -1
-        }
-    }, {
-        '$limit': 10
-    }, {
-        '$project': {
-            'keyword': '$_id', 
-            'count': 1, 
-            '_id': 0
+            '_id': '$sentiment',
+            'avg_temp': {'$avg': '$Tempo'}  
         }
     }
 ])
 
-# Prepare data for plotting and tabulating
-keywords = []
-counts = []
-table_data = []
-
+sentiments = []
+avg_tempos = []
+colors = {'positive': 'blue', 'negative': 'red', 'neutral': 'green'}  # Specify colors for each sentiment
 for doc in result:
-    keyword = doc['keyword']
-    count = doc['count']
-    keywords.append(keyword)
-    counts.append(count)
-    table_data.append([keyword, count])
+    sentiments.append(doc['_id'])
+    avg_tempos.append(doc['avg_temp'])
 
-# Plotting
-plt.bar(keywords, counts)
-plt.xlabel('Keywords')
-plt.ylabel('Frequency')
-plt.title('Top 10 Keywords in Description')
-plt.xticks(rotation=45)
-plt.tight_layout()
+# Plot the bar graph with specified colors
+plt.bar(sentiments, avg_tempos, color=[colors[s] for s in sentiments])
+plt.title('Average Tempo by Sentiment')
+plt.xlabel('Sentiment')
+plt.ylabel('Average Tempo')
 plt.show()
-
-# Tabulating
-headers = ['Keyword', 'Count']
-print(tabulate(table_data, headers=headers, tablefmt='grid'))
 
 client.close()
