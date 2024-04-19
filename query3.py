@@ -60,20 +60,26 @@ non_social_values = [non_social_metrics.get("avg_views", 0), non_social_metrics.
 
 # Plotting
 x = range(len(labels))
-width = 0.35  # Width of the bars
 
-fig, ax = plt.subplots()
+# Plotting Views
+plt.subplot(2, 2, 2)
+plt.bar(['Social', 'Non-Social'], [social_values[0], non_social_values[0]])
+plt.title('Average Views by Social Category')
+plt.ylabel('Average Views')
 
-bars1 = ax.bar(x, social_values, width, label='Social')
-bars2 = ax.bar([i + width for i in x], non_social_values, width, label='Non-Social')
+# Plotting Likes
+plt.subplot(2, 2, 3)
+plt.bar(['Social', 'Non-Social'], [social_values[1], non_social_values[1]])
+plt.title('Average Likes by Social Category')
+plt.ylabel('Average Likes')
 
-ax.set_xlabel('Metrics')
-ax.set_ylabel('Average')
-ax.set_title('Average Metrics for Social vs Non-Social')
-ax.set_xticks([i + 0.5 * width for i in x])
-ax.set_xticklabels(labels)
-ax.legend()
+# Plotting Comments
+plt.subplot(2, 2, 4)
+plt.bar(['Social', 'Non-Social'], [social_values[2], non_social_values[2]])
+plt.title('Average Comments by Social Category')
+plt.ylabel('Average Comments')
 
+plt.tight_layout()
 plt.show()
 
 client.close()

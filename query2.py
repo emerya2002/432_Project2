@@ -60,13 +60,32 @@ non_english_values = [non_english_metrics["avg_streams"], non_english_metrics["a
 
 x = range(len(labels))
 
-plt.bar(x, english_values, label='English')
-plt.bar([i + 0.4 for i in x], non_english_values, label='Non-English')
+# Plotting Streams
+plt.figure(figsize=(10, 8))
+plt.subplot(2, 2, 1)
+plt.bar(['English', 'Non-English'], [english_values[0], non_english_values[0]])
+plt.title('Average Streams by Language')
+plt.ylabel('Average Streams')
 
-plt.xlabel('Metrics')
-plt.ylabel('Average')
-plt.title('Average Metrics by Language')
-plt.xticks([i + 0.2 for i in x], labels)
-plt.legend()
+# Plotting Views
+plt.subplot(2, 2, 2)
+plt.bar(['English', 'Non-English'], [english_values[1], non_english_values[1]])
+plt.title('Average Views by Language')
+plt.ylabel('Average Views')
 
+# Plotting Likes
+plt.subplot(2, 2, 3)
+plt.bar(['English', 'Non-English'], [english_values[2], non_english_values[2]])
+plt.title('Average Likes by Language')
+plt.ylabel('Average Likes')
+
+# Plotting Comments
+plt.subplot(2, 2, 4)
+plt.bar(['English', 'Non-English'], [english_values[3], non_english_values[3]])
+plt.title('Average Comments by Language')
+plt.ylabel('Average Comments')
+
+plt.tight_layout()
 plt.show()
+
+client.close()
