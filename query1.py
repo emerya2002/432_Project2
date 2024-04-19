@@ -25,7 +25,7 @@ result = client['Spotify_Youtube']['songs'].aggregate([
             'Valence': 1, 
             'Tempo': 1, 
             'Duration_ms': 1, 
-            'Streams': 1,  # corrected from 'Stream'
+            'Streams': 1,  
             'Views': 1, 
             'Likes': 1, 
             'Comments': 1
