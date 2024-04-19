@@ -2,14 +2,6 @@ import re
 from pymongo import MongoClient
 import matplotlib.pyplot as plt
 
-def sentiment(s):
-    if s > 0:
-        return "positive"
-    elif s < 0:
-        return "negative"
-    else:
-        return "neutral"
-
 client = MongoClient('mongodb://localhost:27017/')
 result = client['Spotify_Youtube']['songs'].aggregate([
     {
@@ -36,8 +28,10 @@ result = client['Spotify_Youtube']['songs'].aggregate([
             'sentiment': {
                 '$switch': {
                     'branches': [
-                        {'case': {'$gt': ['$Likes', '$Comments']}, 'then': 'positive'},
-                        {'case': {'$lt': ['$Likes', '$Comments']}, 'then': 'negative'},
+                        {'case': {'$and': [{'$gt': ['$Likes', '$Comments']}, {'$regexMatch': {'input': {'$toString': '$Description'}, 'regex': '(?i)happy|good|great|awesome|positive'}}]}, 'then': 'positive'},
+                        {'case': {'$and': [{'$lt': ['$Likes', '$Comments']}, {'$regexMatch': {'input': {'$toString': '$Description'}, 'regex': '(?i)sad|bad|awful|terrible|negative'}}]}, 'then': 'negative'},
+                        {'case': {'$regexMatch': {'input': {'$toString': '$Description'}, 'regex': '(?i)happy|good|great|awesome|positive'}}, 'then': 'positive'},
+                        {'case': {'$regexMatch': {'input': {'$toString': '$Description'}, 'regex': '(?i)sad|bad|awful|terrible|negative'}}, 'then': 'negative'},
                     ],
                     'default': 'neutral'
                 }
@@ -54,12 +48,11 @@ result = client['Spotify_Youtube']['songs'].aggregate([
 
 sentiments = []
 avg_tempos = []
-colors = {'positive': 'blue', 'negative': 'red', 'neutral': 'green'}  # Specify colors for each sentiment
+colors = {'positive': 'blue', 'negative': 'red', 'neutral': 'green'}  
 for doc in result:
     sentiments.append(doc['_id'])
     avg_tempos.append(doc['avg_temp'])
 
-# Plot the bar graph with specified colors
 plt.bar(sentiments, avg_tempos, color=[colors[s] for s in sentiments])
 plt.title('Average Tempo by Sentiment')
 plt.xlabel('Sentiment')
